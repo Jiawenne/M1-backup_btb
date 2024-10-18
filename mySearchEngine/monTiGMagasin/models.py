@@ -20,12 +20,17 @@ class InfoProduct(models.Model):
         ordering = ('name',)
 
 class Transaction(models.Model):
-
+    SALE_TYPE_CHOICES = [
+        ('sale', 'Sale'),
+        ('purchase', 'Purchase'),
+        ('unsold', 'Unsold Withdrawal')
+    ]
+        
     quantity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
-    is_purchase = models.BooleanField()  # True for purchase, False for sale
     product = models.ForeignKey(InfoProduct, on_delete=models.CASCADE)
+    sale_type = models.CharField(max_length=20, choices=SALE_TYPE_CHOICES)
 
     class Meta:
         ordering = ('-date',)

@@ -9,4 +9,4 @@ class InfoProductSerializer(ModelSerializer):
 class TransactionSerializer(ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ('id', 'quantity', 'price', 'date', 'is_purchase', 'product')
+        fields = ('id', 'quantity', 'price', 'date', 'sale_type', 'product')

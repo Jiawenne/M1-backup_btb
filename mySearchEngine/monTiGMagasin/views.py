@@ -136,7 +136,7 @@ class TransactionView(APIView):
     def increment_stock(self, product, number):
         product.quantityInStock += number
         product.save()
-        self.create_transaction(product, number, product.price, True, None)
+        self.create_transaction(product, number, product.price, 'purchase')
         update_product_promotion(product)
 
     def decrement_stock(self, product, number, sale_type):
@@ -145,13 +145,13 @@ class TransactionView(APIView):
         product.quantityInStock = max(0, product.quantityInStock - number)
         product.save()
         price = 0 if sale_type == 'unsold' else product.price
-        self.create_transaction(product, number, price, False, sale_type)
+        self.create_transaction(product, number, price, sale_type)
         update_product_promotion(product)
 
-    def create_transaction(self, product, quantity, price, is_purchase, sale_type):
+    def create_transaction(self, product, quantity, price, sale_type):
         Transaction.objects.create(
             quantity=quantity,
             price=price,
-            is_purchase=is_purchase,
+            sale_type=sale_type,
             product=product
         )
