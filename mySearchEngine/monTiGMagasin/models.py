@@ -18,3 +18,14 @@ class InfoProduct(models.Model):
 
     class Meta:
         ordering = ('name',)
+
+class Transaction(models.Model):
+
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateTimeField(auto_now_add=True)
+    is_purchase = models.BooleanField()  # True for purchase, False for sale
+    product = models.ForeignKey(InfoProduct, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('-date',)

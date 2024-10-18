@@ -8,5 +8,8 @@ urlpatterns = [
     path('removesale/<int:id>/', views.RemoveSale.as_view()),
     path('incrementStock/<int:id>/<int:number>/', views.IncrementStock.as_view()),
     path('decrementStock/<int:id>/<int:number>/', views.DecrementStock.as_view()),
+    path('transactions/', views.TransactionList.as_view()),
+    path('transaction/<int:id>/<str:sale_type>/<int:number>/', views.TransactionView.as_view(), name='transaction'),
+
 ]
     
