@@ -1,31 +1,50 @@
 from django.core.management.base import BaseCommand
 from monTiGMagasin.models import InfoProduct
 from monTiGMagasin.serializers import InfoProductSerializer
+from monTiGMagasin.config import baseUrl
 import requests
 import time
-from django.db import transaction
+from django.db import connection
 
 class Command(BaseCommand):
-    help = 'Refresh  '
+    help = 'Refresh the list of products from TiG server.'
 
     def handle(self, *args, **options):
-        self.stdout.write(f"[{time.ctime()}] refreshing")
+        self.stdout.write('[' + time.ctime() + '] Refreshing data...')
+        # Supprimer tous les produits
+        InfoProduct.objects.all().delete()
         
-        try:
-            response = requests.get('http://51.255.166.155:1352/tig/products/')
-            response.raise_for_status()  # 如果响应状态码不是200，将引发异常
-            jsondata = response.json()
-        except requests.RequestException as e:
-            self.stderr.write(self.style.ERROR(f"[{time.ctime()}] error: {str(e)}"))
-            return
-        except ValueError as e:
-            self.stderr.write(self.style.ERROR(f"[{time.ctime()}] JSON error: {str(e)}"))
-            self.stderr.write(f"reponse: {response.text}")
-            return
+        # Réinitialiser l'auto-incrémentation de l'ID
+        with connection.cursor() as cursor:
+            cursor.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'monTiGMagasin_infoproduct';")
+        
+        
+        # Obtenir les données des produits depuis l'API TiG
+        response = requests.get(baseUrl + 'products/')
+        jsondata = response.json()
 
-        with transaction.atomic():
-            InfoProduct.objects.all().delete()
-            for product in jsondata:
+        for product in jsondata:
+            # Chercher un produit avec le même tig_id dans la base de données
+            existing_product = InfoProduct.objects.filter(tig_id=product['id']).first()
+            
+            # Si le produit existe, on le met à jour
+            if existing_product:
+                serializer = InfoProductSerializer(existing_product, data={
+                    'tig_id': str(product['id']),
+                    'name': str(product['name']),
+                    'category': str(product['category']),
+                    'price': str(product['price']),
+                    'unit': str(product['unit']),
+                    'availability': str(product['availability']),
+                    'sale': str(product['sale']),
+                    'discount': str(product['discount']),
+                    'comments': str(product['comments']),
+                    'owner': str(product['owner']),
+                    'quantityInStock': '0',
+                })
+                action = 'updated'
+            # Si le produit n'existe pas, on le crée
+            else:
                 serializer = InfoProductSerializer(data={
                     'tig_id': str(product['id']),
                     'name': str(product['name']),
@@ -39,10 +58,12 @@ class Command(BaseCommand):
                     'owner': str(product['owner']),
                     'quantityInStock': '0',
                 })
-                if serializer.is_valid():
-                    serializer.save()
-                    self.stdout.write(self.style.SUCCESS(f"[{time.ctime()}] success add product id='{product['id']}'"))
-                else:
-                    self.stderr.write(self.style.WARNING(f"[{time.ctime()}] success add product id='{product['id']}': {serializer.errors}"))
+                action = 'created'
 
-        self.stdout.write(f"[{time.ctime()}] ")
+            if serializer.is_valid():
+                serializer.save()
+                self.stdout.write(self.style.SUCCESS(f"[{time.ctime()}] Successfully {action} product id='{product['id']}'"))
+            else:
+                self.stdout.write(self.style.ERROR(f"[{time.ctime()}] Validation Error for product id='{product['id']}': {serializer.errors}"))
+
+        self.stdout.write('[' + time.ctime() + '] Data refresh terminated.')

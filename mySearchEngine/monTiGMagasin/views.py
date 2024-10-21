@@ -33,10 +33,12 @@ class PutOnSale(APIView):
         except InfoProduct.DoesNotExist:
             raise Http404
 
-    def put(self, request, id, newprice, format=None):
+    def get(self, request, id, newprice, format=None):
+        print("newprice")
         product = self.get_object(id)
         product.sale = True
         try:
+            print("fghjkjhgcfghyuiop")
             product.discount = float(newprice)
         except ValueError:
             return Response({"error": "Invalid price format"}, status=400)
@@ -69,7 +71,6 @@ class IncrementStock(APIView):
         product = self.get_object(id)
         product.quantityInStock += int(number)
         product.save()
-        update_product_promotion(product)
         serializer = InfoProductSerializer(product)
         return Response(serializer.data)
 
@@ -88,7 +89,6 @@ class DecrementStock(APIView):
             return Response({"error": "Not enough stock"}, status=400)
         product.quantityInStock = max(0, product.quantityInStock - int(number))
         product.save()
-        update_product_promotion(product)
         serializer = InfoProductSerializer(product)
         return Response(serializer.data)
 
