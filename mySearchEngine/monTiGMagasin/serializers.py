@@ -5,7 +5,7 @@ from monTiGMagasin.models import Transaction
 class InfoProductSerializer(ModelSerializer):
     class Meta:
         model = InfoProduct
-        fields = ('id','tig_id', 'name', 'category', 'price', 'unit', 'availability', 'sale', 'discount', 'comments', 'owner', 'quantityInStock')
+        fields = ('id','tig_id', 'name', 'category', 'price', 'unit', 'availability', 'sale', 'discount', 'comments', 'owner', 'quantityInStock','discount_price')
 class TransactionSerializer(ModelSerializer):
     class Meta:
         model = Transaction
