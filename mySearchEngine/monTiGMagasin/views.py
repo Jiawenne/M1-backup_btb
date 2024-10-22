@@ -105,13 +105,11 @@ def update_product_promotion(product):
     product.save()
 
 class TransactionList(APIView):
-    def get_queryset(self):
-        return Transaction.objects.all()
-
     def get(self, request, format=None):
-        transactions = self.get_queryset()
-        serializer = TransactionSerializer(transactions, many=True)
+        products = Transaction.objects.all()
+        serializer = TransactionSerializer(products, many=True)
         return Response(serializer.data)
+        
 class TransactionView(APIView):
     def get_object(self, id):
         try:
